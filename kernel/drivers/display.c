@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
 #include "mem.h"
@@ -8,6 +8,8 @@
 #include "ports.h"
 #include "display.h"
 #include "stdlib.h"
+
+#define TAB_LENGTH 4
 
 void set_cursor(int offset) {
     offset /= 2;
@@ -25,19 +27,19 @@ int get_cursor() {
     return offset * 2;
 }
 
-static int get_offset(int col, int row) {
+static inline int get_offset(int col, int row) {
     return 2 * (row * MAX_COLS + col);
 }
 
-static int get_row_from_offset(int offset) {
+static inline int get_row_from_offset(int offset) {
     return offset / (2 * MAX_COLS);
 }
 
-static int move_offset_to_new_line(int offset) {
+static inline int move_offset_to_new_line(int offset) {
     return get_offset(0, get_row_from_offset(offset) + 1);
 }
 
-static void set_char_at_video_memory(char character, int offset) {
+static inline void set_char_at_video_memory(char character, int offset) {
     u8 *vidmem = (u8*) VIDEO_ADDRESS;
     vidmem[offset] = character;
     vidmem[offset + 1] = WHITE_ON_BLACK;
@@ -57,6 +59,20 @@ static int scroll_ln(int offset) {
     return offset - 2 * MAX_COLS;
 }
 
+static inline void print_nl() {
+    int newOffset = move_offset_to_new_line(get_cursor());
+    if (newOffset >= MAX_ROWS * MAX_COLS * 2) {
+        newOffset = scroll_ln(newOffset);
+    }
+    set_cursor(newOffset);
+}
+
+static inline void print_backspace() {
+    int newCursor = get_cursor() - 2;
+    set_char_at_video_memory(' ', newCursor);
+    set_cursor(newCursor);
+}
+
 void print_char(char c) {
     int offset = get_cursor();
     if (offset >= MAX_ROWS * MAX_COLS * 2) {
@@ -64,6 +80,12 @@ void print_char(char c) {
     }
     if (c == '\n') {
         print_nl();
+    } else if (c == '\t') {
+        for (char i = 0; i < TAB_LENGTH; i++) {
+            print_char(' ');
+        }
+    } else if (c == '\b') {
+        print_backspace();
     } else {
         set_char_at_video_memory(c, offset);
         offset += 2;
@@ -72,29 +94,9 @@ void print_char(char c) {
 }
 
 void print_string(char *string) {
-    int offset = get_cursor();
-    int i = 0;
-    while (string[i] != 0) {
-        if (offset >= MAX_ROWS * MAX_COLS * 2) {
-            offset = scroll_ln(offset);
-        }
-        if (string[i] == '\n') {
-            offset = move_offset_to_new_line(offset);
-        } else {
-            set_char_at_video_memory(string[i], offset);
-            offset += 2;
-        }
-        i++;
+    for (int i = 0; string[i] != '\0'; i++) {
+        print_char(string[i]);
     }
-    set_cursor(offset);
-}
-
-void print_nl() {
-    int newOffset = move_offset_to_new_line(get_cursor());
-    if (newOffset >= MAX_ROWS * MAX_COLS * 2) {
-        newOffset = scroll_ln(newOffset);
-    }
-    set_cursor(newOffset);
 }
 
 void clear_screen() {
@@ -103,10 +105,4 @@ void clear_screen() {
         set_char_at_video_memory(' ', i * 2);
     }
     set_cursor(get_offset(0, 0));
-}
-
-void print_backspace() {
-    int newCursor = get_cursor() - 2;
-    set_char_at_video_memory(' ', newCursor);
-    set_cursor(newCursor);
 }

@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
 #pragma once
@@ -9,14 +9,6 @@
 #define true 1
 #define false 0
 #define nullptr ((void *) 0)
-
-typedef struct {
-    float Re, Im;
-} complex32_t;
-
-typedef struct {
-    double Re, Im;
-} complex64_t;
 
 typedef void *type_t;
 typedef char bool;

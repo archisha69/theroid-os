@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
 #include "mem.h"
@@ -77,7 +77,10 @@ void *malloc(size_t size) {
         best_mem_block->next = mem_node_allocate;
         return (void *) ((u8 *) mem_node_allocate + DYNAMIC_MEM_NODE_SIZE);
     }
-
+    
+    #ifdef DEBUG
+    printf("malloc: memory not allocated\n");
+    #endif
     return nullptr;
 }
 
@@ -90,6 +93,24 @@ void *calloc(size_t nmemb, size_t size) {
         bzero(ptr, nmemb * size);
         return ptr;
     }
+}
+
+void *realloc(void *ptr, size_t size) {
+    void *res;
+    if (ptr == nullptr) {
+        res = malloc(size);
+    } else {
+        if (sizeof(ptr) < size) {
+            res = malloc(size);
+            if (res == nullptr) return nullptr;
+
+            memcpy(res, ptr, sizeof(ptr));
+            free(ptr);
+        } else {
+            res = ptr;
+        }
+    }
+    return res;
 }
 
 static void *merge_next_node_into_current(dynamic_mem_node_t* current_mem_node) {

@@ -1,8 +1,9 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
+#include "mem.h"
 #include "rand.h"
 #include "string.h"
 #include "timer.h"
@@ -25,13 +26,20 @@ void srand(u32 seed) {
     next = seed;
 }
 
-/*
-char *rand_string(u16 len, char *arr) { //not working very well
-    if (strlen(arr) == 0) return nullptr;
+char *rand_string(u16 len, char *charset) {
     char *res;
-    for (u16 i = 0; i < len; i++) {
-        res[i] = arr[rand() % (strlen(arr) - 1)];
+    if (len) {
+        res = malloc(len + 1);
+        if (res) {
+            int l = strlen(charset) - 1;
+            int k;
+            for (int i = 0; i < len; i++) {
+                k = rand() % l;
+                res[i] = charset[k];
+            }
+            res[len] = '\0';
+        }
     }
+
     return res;
 }
-*/

@@ -10,9 +10,7 @@
 
 #include "drive.h"
 
-static void drive_interrupt_handler() {
-    
-}
+static void drive_interrupt_handler() {}
 
 void init_drive() {
     register_interrupt_handler(IRQ2, drive_interrupt_handler);

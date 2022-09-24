@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
 #pragma once
@@ -16,6 +16,4 @@ void set_cursor(int offset);
 int get_cursor();
 void print_char(char c);
 void print_string(char *string);
-void print_nl();
 void clear_screen();
-void print_backspace();

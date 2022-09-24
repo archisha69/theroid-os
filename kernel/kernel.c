@@ -1,9 +1,9 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
-#include "mem.h"  //i dont use <> in includes because clangd gets confused
+#include "mem.h"
 #include "idt.h"
 #include "isr.h"
 #include "rand.h"
@@ -22,29 +22,54 @@
 
 void start_kernel() {
     clear_screen();
+
+    #ifdef DEBUG
     printf("Initializing interrupt service routines\n");
+    #endif
     isr_install();
 
+    #ifdef DEBUG
     printf("Enabling external interrupts\n");
+    #endif
     asm volatile("sti");
 
+    #ifdef DEBUG
     printf("Initializing timer (IRQ 0)\n");
+    #endif
     init_timer(50);
 
-    printf("[%u] Initializing keyboard (IRQ 1)\n", gettick());
-    init_keyboard();
-
+    #ifdef DEBUG
     printf("[%u] Initializing dynamic memory\n", gettick());
+    #endif
     init_dynamic_mem();
 
+    #ifdef DEBUG
+    printf("[%u] Testing dynamic memory\n", gettick());
+    void *ptr = malloc(10);
+    if (ptr == nullptr) panic("malloc: failed to allocate memory");
+    ptr = realloc(ptr, 20);
+    if (ptr == nullptr) panic("realloc: failed to reallocate memory");
+    void *ptr1 = calloc(2, 10);
+    if (ptr1 == nullptr) panic("calloc: failed to allocate memory");
+    free(ptr);
+    free(ptr1);
+    #endif
+
+    #ifdef DEBUG
+    printf("[%u] Initializing keyboard (IRQ 1)\n", gettick());
+    #endif
+    init_keyboard();
+
+    #ifdef DEBUG
     printf("[%u] Initializing hard drive (IRQ 2, 3)\n", gettick());
+    #endif
     init_drive();
 
-    printf("Welcome to theroid os!\ntype help for a command list\n>> ", gettick());
+    printf("Welcome to theroid os!\ntype help for a command list\n>> ");
 }
 
 void execute_command(char *input) {
-    print_nl();
+    printf("\n");
     input = trim(input);
     if (strcmp(input, "halt") || strcmp(input, "shutdown")) {
         shutdown();
@@ -61,19 +86,20 @@ void execute_command(char *input) {
             ">> "
         );
     } else if (startswith(input, "echo")) {
-        char **arr;
-        int tokens = split(input, ' ', &arr);
-        for (int i = 1; i < tokens; i++) {
-            printf("%s ", arr[i]);
+        char **arr = split(input, ' ');
+        int i = 1;
+        while (!strcmp(arr[i], "\0")) {
+            printf(arr[i]);
+            i++;
         }
-        print_nl();
-        printf(">> ");
+        printf("\n>> ");
     } else if (startswith(input, "panic")) {
         panic("e");
     } else if (strcmp(input, "reboot")) {
         reboot();
-    } else if (strcmp(input, "rand")) {
-        printf("%u", rand() % (rand() % rand()));
+    } else if(strcmp(input, "rand")) {
+        //srand(gettick());
+        printf(rand_string(rand() % 32, STRING_LETTERS));
     }
     else {
         printf("Unknown command: %s\n>> ", input);
@@ -82,6 +108,6 @@ void execute_command(char *input) {
 
 void panic(char *message) {
     clear_screen();
-    printf("----beginning of kernel panic----\n\n%s\n\n-------end of kernel panic-------\n", message);
+    printf("----beginning of kernel panic----\n\n[%u] %s\n\n-------end of kernel panic-------\n", gettick(), message);
     asm volatile("cli\nhlt");
 }

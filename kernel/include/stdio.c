@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
 #include "types.h"
@@ -47,22 +47,18 @@ static void _printhex(u32 n) {
 
         if (tmp >= 0xA) {
             bl = false;
-            char c = tmp - 0xA + 'a';
-            print_string(&c);
+            print_char(tmp - 0xA + 'a');
         } else {
             bl = false;
-            char c = tmp + '0';
-            print_string(&c);
+            print_char(tmp + '0');
         }
     }
 
     tmp = n & 0xF;
     if (tmp >= 0xA) {
-        char c = tmp - 0xA + 'a';
-        print_string(&c);
+        print_char(tmp - 0xA + 'a');
     } else {
-        char c = tmp + '0';
-        print_string(&c);
+        print_char(tmp + '0');
     }
 }
 

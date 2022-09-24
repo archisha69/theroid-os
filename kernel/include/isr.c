@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2022 thatOneArchUser
-    All rights reserverd
+    All rights reserved
 */
 
 #include "isr.h"
@@ -86,6 +86,7 @@ char *exception_messages[] = {
         "Out of Bounds",
         "Invalid Opcode",
         "No Coprocessor",
+
         "Double Fault",
         "Coprocessor Segment Overrun",
         "Bad TSS",
@@ -94,6 +95,7 @@ char *exception_messages[] = {
         "General Protection Fault",
         "Page Fault",
         "Unknown Interrupt",
+
         "Coprocessor Fault",
         "Alignment Check",
         "Machine Check",
@@ -102,6 +104,7 @@ char *exception_messages[] = {
         "Reserved",
         "Reserved",
         "Reserved",
+
         "Reserved",
         "Reserved",
         "Reserved",
@@ -114,7 +117,7 @@ char *exception_messages[] = {
 
 void isr_handler(registers_t *r) {
     char *msg;
-    printf("received interrupt: %u\n%s", r->int_no, exception_messages[r->int_no]);
+    printf("%u", r->int_no);
     panic(msg);
 }
 
