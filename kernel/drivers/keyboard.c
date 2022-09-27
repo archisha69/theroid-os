@@ -73,6 +73,7 @@ const char sc_ascii[] = {'?', '?', '1', '2', '3', '4', '5', '6',
                          'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z', 'x', 'c', 'v',
                          'b', 'n', 'm', ',', '.', '/', '?', '?', '?', ' '};
 
+/*
 static bool backspace(char s[]) {
     int len = strlen(s);
     if (len > 0) {
@@ -82,6 +83,7 @@ static bool backspace(char s[]) {
         return false;
     }
 }
+*/
 
 static void keyboard_callback(registers_t *regs) {
     u8 status;
