@@ -6,24 +6,24 @@
 #include "mem.h"
 #include "types.h"
 #include "ports.h"
-#include "display.h"
 #include "stdlib.h"
+#include "hw/display.h"
 
 #define TAB_LENGTH 4
 
 void set_cursor(int offset) {
     offset /= 2;
-    port_byte_out(REG_SCREEN_CTRL, 14);
-    port_byte_out(REG_SCREEN_DATA, (u8) (offset >> 8));
-    port_byte_out(REG_SCREEN_CTRL, 15);
-    port_byte_out(REG_SCREEN_DATA, (u8) (offset & 0xff));
+    outb(REG_SCREEN_CTRL, 14);
+    outb(REG_SCREEN_DATA, (u8) (offset >> 8));
+    outb(REG_SCREEN_CTRL, 15);
+    outb(REG_SCREEN_DATA, (u8) (offset & 0xff));
 }
 
 int get_cursor() {
-    port_byte_out(REG_SCREEN_CTRL, 14);
-    int offset = port_byte_in(REG_SCREEN_DATA) << 8;
-    port_byte_out(REG_SCREEN_CTRL, 15);
-    offset += port_byte_in(REG_SCREEN_DATA);
+    outb(REG_SCREEN_CTRL, 14);
+    int offset = inb(REG_SCREEN_DATA) << 8;
+    outb(REG_SCREEN_CTRL, 15);
+    offset += inb(REG_SCREEN_DATA);
     return offset * 2;
 }
 
@@ -40,7 +40,7 @@ static inline int move_offset_to_new_line(int offset) {
 }
 
 static inline void set_char_at_video_memory(char character, int offset) {
-    u8 *vidmem = (u8*) VIDEO_ADDRESS;
+    volatile u8 *vidmem = (u8*) VIDEO_ADDRESS;
     vidmem[offset] = character;
     vidmem[offset + 1] = WHITE_ON_BLACK;
 }

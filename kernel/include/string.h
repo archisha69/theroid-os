@@ -14,10 +14,11 @@
 #define STRING_LETTERS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 #define STRING_DIGITS "0123456789"
 
-bool backspace(char *s);
 void append(char *s, char n);
 bool startswith(char str[], char what[]);
 char *strtok(char *s, char *delm);
 char *strdup(char *token);
-char **split(char *str, char delm);
+char *strcat(char *dest, char *src);
+int split(char *str, char delimiter, char ***dest);
 char *trim(char *str);
+bool isdigit(char c);

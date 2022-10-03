@@ -16,16 +16,6 @@ void append(char *s, char n) {
     s[len+1] = '\0';
 }
 
-bool backspace(char s[]) {
-    int len = strlen(s);
-    if (len > 0) {
-        s[len - 1] = '\0';
-        return true;
-    } else {
-        return false;
-    }
-}
-
 bool startswith(char str[], char what[]) {
     int len = strlen(what);
     for (int i = 0; i < len; i++) {
@@ -84,41 +74,60 @@ char *strdup(char *token) {
     return str;
 }
 
-char **split(char *str, char delm) {
-    char **res;
-    size_t count;
-    char *tmp;
-    char *last;
-    char delim[2];
-    delim[0] = delm;
-    delim[1] = 0;
+char *strcat(char *dest, char *src) {
+    char *ptr = dest + strlen(dest);
 
-    while (*tmp) {
-        if (delm == *tmp) {
-            count++;
-            last = tmp;
-        }
-        tmp++;
+    while (*src != '\0') {
+        *ptr++ = *src;
+    }
+    *ptr = '\0';
+    return dest;
+}
+
+int split(char *str, char delimiter, char ***dest) {
+    int count = 1;
+    int token_len = 1;
+    int i = 0;
+    char *p;
+    char *t;
+
+    p = str;
+    while (*p != '\0') {
+        if (*p == delimiter) count++;
+        p++;
     }
 
-    count += last < (str + strlen(str) - 1);
-    count++;
-
-    res = malloc(sizeof(char*) * count);
-    if (res) {
-        size_t idx = 0;
-        char *token = strtok(str, delim);
-
-        while (token) {
-            ASSERT(idx < count);
-            *(res + idx++) = strdup(token);
-            token = strtok(0, delim);
+    *dest = (char **) malloc(count);
+    if (*dest == 0) return 1;
+    p = str;
+    while (*p != '\0') {
+        if (*p == delimiter) {
+            (*dest)[i] = (char *) malloc(token_len);
+            if ((*dest)[i] == 0) return 1;
+            token_len = 0;
+            i++;
         }
-        ASSERT(idx == count - 1);
-        *(res + idx) = 0;
+        p++;
+        token_len++;
+    }
+    (*dest)[i] = (char *) malloc(token_len);
+    if ((*dest)[i] == 0) return 1;
+    i = 0;
+    p = str;
+    t = ((*dest)[i]);
+    while (*p != '\0') {
+        if (*p != delimiter && *p != '\0') {
+            *t = *p;
+            t++;
+        } else {
+            *t = '\0';
+            i++;
+            t = ((*dest)[i]);
+        }
+        p++;
     }
 
-    return res;
+    return count;
 }
 
 char *trim(char *str) {
@@ -129,4 +138,9 @@ char *trim(char *str) {
     while (end > str && *end == ' ') end--;
     end[1] = '\0';
     return str;
+}
+
+bool isdigit(char c) {
+    if (c >= '0' && c <= '9') return true;
+    return false;
 }

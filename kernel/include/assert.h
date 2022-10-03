@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "../kernel.h"
+#include "kernel.h"
 
-#define ASSERT(CONDITION) \
-    if (CONDITION) {} else { panic("Assertion failure"); }
+#define ASSERT(CONDITION) if (CONDITION) {} else { panic("Assertion failure"); }

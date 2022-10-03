@@ -4,22 +4,23 @@
 */
 
 #include "ports.h"
+#include "kernel.h"
 
 void reboot() {
-    asm volatile("cli");
+    INT_STOP;
     unsigned temp;
     do {
-        temp = port_byte_in(0x64);
+        temp = inb(0x64);
         if ((temp & 0x01) != 0) {
-            (void)port_byte_in(0x60);
+            inb(0x60);
             continue;
         } 
     } while ((temp & 0x02) != 0);
-    port_byte_out(0x64, 0xFE);
+    outb(0x64, 0xFE);
     while (1);
 }
 
 void shutdown() {
-    for (char *q = "Shutdown"; *q; ++q) port_byte_out(0x8900, *q);
-    port_byte_out(0xf4, 0x00); //if above function fails
+    for (char *q = "Shutdown"; *q; ++q) outb(0x8900, *q);
+    outb(0xf4, 0x00); //if above function fails
 }

@@ -8,7 +8,7 @@
 #include "mem.h"
 #include "stdlib.h"
 
-#include "drive.h"
+#include "hw/drive.h"
 
 static void drive_interrupt_handler() {}
 

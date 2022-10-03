@@ -7,7 +7,8 @@
 #include "string.h"
 #include "types.h"
 #include "stdio.h"
-#include "../kernel.h"
+#include "stdlib.h"
+#include "kernel.h"
 
 #define DYNAMIC_MEM_TOTAL_SIZE 4*1024
 #define DYNAMIC_MEM_NODE_SIZE sizeof(dynamic_mem_node_t)
@@ -27,13 +28,6 @@ static void bzero(void *s, size_t n) {
     size_t i;
     for (i = 0; i < n; i++) {
         c[i] = '\0';
-    }
-}
-
-void memory_copy(u8 *source, u8 *dest, u32 nbytes) {
-    int i;
-    for (i = 0; i < nbytes; i++) {
-        *(dest + i) = *(source + i);
     }
 }
 

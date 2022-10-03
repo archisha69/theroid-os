@@ -8,4 +8,5 @@
 #include "types.h"
 
 void init_timer(u32 freq);
+void sleep(u32 ms);
 u32 gettick();

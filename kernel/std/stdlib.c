@@ -5,7 +5,7 @@
 
 #include "math.h"
 #include "stdlib.h"
-#include "../drivers/display.h"
+#include "hw/display.h"
 
 extern void *get_ebp();
 
@@ -21,8 +21,8 @@ void memcpy(void *dest, void *source, int num) {
   }
 }
 
-i32 strcpy(char *dest, char *source) {
-    i32 num = 0;
+int strcpy(char *dest, char *source) {
+    int num = 0;
     while (1) {
         char c = *source;
         *dest = c;
@@ -42,15 +42,14 @@ u32 strlen(char *str) {
 }
 
 bool strcmp(char *str1, char *str2) {
-    char c;
     if (strlen(str1) != strlen(str2)) return false;
-    for (int i = 0; i < strlen(str1); i++) {
+    for (u32 i = 0; i < strlen(str1); i++) {
         if (str1[i] != str2[i]) return false;
     }
     return true;
 }
 
-i32 int2str(char *dest, i32 num) {
+int int2str(char *dest, int num) {
     u32 start = 0;
     if (num < 0) {
         dest[start++] = '-';
@@ -70,7 +69,7 @@ i32 int2str(char *dest, i32 num) {
     return start + 14 - i;
 }
 
-i32 int2hex(char *dest, i32 num) {
+int int2hex(char *dest, int num) {
     u32 start = 0;
     if (num < 0) {
         dest[start++] = '-';
@@ -108,7 +107,7 @@ void sprintf_args(char *dest, char *str, void *ptr) {
             if (c == '\0') break;
 
             if (next == 'd') {
-                i32 int_arg = *((i32*)ptr);
+                int int_arg = *((int *)ptr);
                 char buff[16];
                 int2str(buff, int_arg);
                 write_index += strcpy(dest + write_index, buff);
@@ -120,7 +119,7 @@ void sprintf_args(char *dest, char *str, void *ptr) {
                 write_index += strcpy(dest + write_index, buff);
                 ptr += 4;
             } else if (next == 'x') {
-                i32 int_arg = *((i32*)ptr);
+                int int_arg = *((int*)ptr);
                 char buff[16];
                 int2hex(buff, int_arg);
                 write_index += strcpy(dest + write_index, buff);

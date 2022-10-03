@@ -4,16 +4,17 @@
 */
 
 #include "isr.h"
+#include "rand.h"
+#include "timer.h"
 #include "types.h"
 #include "ports.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "hal/hal.h"
+#include "kernel.h"
 
-#include "display.h"
-#include "keyboard.h"
-#include "../kernel.h"
+#include "hal/hal.h"
+#include "hw/display.h"
 
 #define HOME 0x47
 #define END 0x4F
@@ -51,10 +52,11 @@
 #define FUNCTION9 0x43
 #define FUNCTION10 0x44
 
-static char key_buffer[256];
+static char *key_buffer;
 static bool shift;
 static bool alt;
 static bool ctrl;
+static bool q = false;
 
 const char *sc_name[] = {"ERROR", "Esc", "1", "2", "3", "4", "5", "6",
                          "7", "8", "9", "0", "-", "=", "Backspace", "Tab", "Q", "W", "E",
@@ -73,7 +75,6 @@ const char sc_ascii[] = {'?', '?', '1', '2', '3', '4', '5', '6',
                          'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z', 'x', 'c', 'v',
                          'b', 'n', 'm', ',', '.', '/', '?', '?', '?', ' '};
 
-/*
 static bool backspace(char s[]) {
     int len = strlen(s);
     if (len > 0) {
@@ -83,16 +84,58 @@ static bool backspace(char s[]) {
         return false;
     }
 }
-*/
 
-static void keyboard_callback(registers_t *regs) {
+static void execute_command(char *input) {
+    printf("\n");
+    input = trim(input);
+    if (strcmp(input, "halt") || strcmp(input, "shutdown")) {
+        shutdown();
+    } else if (strcmp(input, "clear")) {
+        clear_screen();
+        printf(">> ");
+    } else if (strcmp(input, "help")) {
+        printf(
+            "halt - stops the system\n"
+            "clear - clears the screen\n"
+            "echo <text> - prints text\n"
+            "panic - triggers a kenrel panic\n"
+            "reboot - reboots the system by causing a triple cpu fault\n"
+            ">> "
+        );
+    } else if (startswith(input, "echo")) {
+        char **arr;
+        int tokens = split(input, ' ', &arr);
+        for (int i = 1; i < tokens; i++) {
+            printf(arr[i]);
+            print_char(' ');
+        }
+        printf("\n>> ");
+    } else if (startswith(input, "panic")) {
+        panic("e");
+    } else if (strcmp(input, "reboot")) {
+        reboot();
+    } else if(strcmp(input, "rand")) {
+        srand(gettick());
+        printf("%s\n>> ", rand_string(rand() % 32, STRING_LETTERS));
+    }
+    else {
+        printf("Unknown command: ");
+        printf(input);
+        printf("\n>> ");
+    }
+}
+
+static void keyboard_callback() {
+    if (!q)  {
+        append(key_buffer, 'e');
+        while (backspace(key_buffer)); //key_buffer[0] = '\0'; causes invalid opcode exception
+        q = true;
+    }
     u8 status;
     u16 scancode;
-    u16 i = 0;
-    char release;
-    status = port_byte_in(0x64);
+    status = inb(0x64);
     if (status & 0x01) {
-        scancode = port_byte_in(0x60);
+        scancode = inb(0x60);
         if (ctrl && scancode == SYSRQ) { 
             if (strlen(key_buffer) == 0) panic("next time dont spam random keys (ctrl + alt + sysrq)");
             else panic(key_buffer);
@@ -102,34 +145,10 @@ static void keyboard_callback(registers_t *regs) {
         if (scancode == ALT_RELEASE) alt = false;
         if (scancode == CTRL) ctrl = true;
         if (scancode == CTRL_RELEASE) ctrl = false;
-        if (scancode == HOME) {
-            while (backspace(key_buffer)) set_cursor(get_cursor() - 1);
-        }
         if (scancode == SHIFT || scancode == RSHIFT) shift = true;
         if (scancode == SHIFT_RELEASE || scancode == RSHIFT_RELEASE) shift = false;
         if (scancode == BACKSPACE) {
             if (backspace(key_buffer)) print_char('\b');
-        }
-        if (scancode == LEFT_ARROW) {
-            if (backspace(key_buffer)) set_cursor(get_cursor()-1);
-        }
-        if (scancode == UP_ARROW) {
-            if (!(i >= (sizeof(history) / sizeof(history[0])))) {
-                while (backspace(key_buffer)) print_char('\b');
-                printf(history[i]);
-                strcpy(key_buffer, history[i]);
-                i++;
-            }
-        }
-        if (scancode == DOWN_ARROW) {
-            if (i > 0) {
-                while (backspace(key_buffer)) print_char('\b');
-                i--;
-                printf(history[i]);
-                strcpy(key_buffer, history[i]);
-            } else if (i == 0) {
-                while (backspace(key_buffer)) print_char('\b');
-            }
         }
         if (scancode == CAPS_LOCK) shift = !shift;
         if (scancode == ENTER) {
@@ -138,11 +157,11 @@ static void keyboard_callback(registers_t *regs) {
                 print_string(">> ");
             } else {
                 if (strcmp(key_buffer, "reboot")) {
-                    key_buffer[0] = '\0';
-                    reboot(); //buffer isnt cleared before reboot
+                    while (backspace(key_buffer));  //buffer isnt cleared before reboot
+                    reboot();
                 }
                 execute_command(key_buffer);
-                key_buffer[0] = '\0';
+                while (backspace(key_buffer));
             }
         }
         if (scancode == TAB) {
@@ -161,10 +180,10 @@ static void keyboard_callback(registers_t *regs) {
             append(key_buffer, letter);
             char str[2] = {letter, '\0'};
             print_string(str);
-            release = port_byte_in(0x60);
+            inb(0x60);
         }
     }
-    port_byte_out(0x20, 0x20);
+    outb(0x20, 0x20);
 }
 
 void init_keyboard() {

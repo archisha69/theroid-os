@@ -6,13 +6,18 @@
 #include "isr.h"
 #include "ports.h"
 
-#include "../kernel.h"
-#include "../drivers/display.h"
+#include "kernel.h"
+#include "hw/display.h"
 
 u32 tick = 0;
 
-static void timer_callback(registers_t *regs) {
+static void timer_callback() {
     tick++;
+}
+
+void sleep(u32 ms) {
+    u32 t = tick + ms;
+    while (tick < t);
 }
 
 u32 gettick() {
@@ -25,8 +30,8 @@ void init_timer(u32 freq) {
 
     u32 divisor = 1193180 / freq;
     u8 low  = (u8)(divisor & 0xFF);
-    u8 high = (u8)( (divisor >> 8) & 0xFF);
-    port_byte_out(0x43, 0x36);
-    port_byte_out(0x40, low);
-    port_byte_out(0x40, high);
+    u8 high = (u8)((divisor >> 8) & 0xFF);
+    outb(0x43, 0x36);
+    outb(0x40, low);
+    outb(0x40, high);
 }

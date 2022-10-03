@@ -27,7 +27,7 @@ void srand(u32 seed) {
 }
 
 char *rand_string(u16 len, char *charset) {
-    char *res;
+    char *res = "\0";
     if (len) {
         res = malloc(len + 1);
         if (res) {
