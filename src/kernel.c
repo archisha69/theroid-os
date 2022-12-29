@@ -10,8 +10,8 @@
 #include <gdt.h>
 #include <idt.h>
 #include <psf.h>
+#include <pmm.h>
 #include <timer.h>
-#include <math.h>
 #include <kheap.h>
 #include <stdio.h>
 #include <malloc.h>
@@ -20,11 +20,15 @@
 #include <paging.h>
 #include <multiboot.h>
 
-#include <fs/initrd.h>
-#include <hw/keyboard.h>
 #include <hal/panic.h>
+#include <task/task.h>
+#include <fs/initrd.h>
+#include <hw/speaker.h>
+#include <hw/keyboard.h>
 
 extern u32 placement_addr;
+
+u32 initial_esp;
 
 void panic(char *fmt, ...) {
     char *str;
@@ -126,30 +130,64 @@ int system(char *cmd) {
         }
         print("\n>> ");
         return EXIT_SUCCESS;
+    } else if (strcmp(argv[0], "sleep")) {
+        sleep(5);
+        print("\n>> ");
     }
 
     printf("Unknown command: %s\n>> ", argv[0]);
     return ERR_CMD_NOTFOUND;
 }
 
-void start_kernel(struct multiboot *mboot_ptr) {
+void start_kernel(struct multiboot *mboot_ptr, u32 initial_stack) {
+    asm volatile("cli");
+    initial_esp = initial_stack;
     clear();
 
+    print("Initializing global descriptor table\n");
     init_gdt();
+
+    print("Initializing interrupt descriptor table\n");
     init_idt();
+
+    print("Initializing interrupt mask register\n");
+    outb(PIC_MASTER_DAT, 0xF9);
+
+    print("Initializing PIT timer\n");
+    init_timer(100);
+
+    print("Initializing PC screen font\n");
     psf_init();
 
+    print("Setting initrd addresses\n");
     ASSERT(mboot_ptr->mods_count > 0);
     u32 initrd_pos = *((u32 *) mboot_ptr->mods_addr);
     u32 initrd_end = *(u32 *) (mboot_ptr->mods_addr + 4);
     placement_addr = initrd_end;
 
+    print("Initializing paging\n");
     init_paging();
+
+    print("Initializing tasking system\n");
+    init_tasking();
+
+    print("Initializing dynamic memory\n");
     init_dynamic_mem();
+
+    print("Initializing keyboard\n");
     init_keyboard();
 
+    print("Setting up initrd root\n");
     fs_root = init_initrd(initrd_pos);
 
+    print("Initializing physical memory manager\n");
+    init_pmm(1073741824); // 1 GB
+
+    print("\nEnabling interrupts\n");
+    asm volatile("sti");
+
+    //clear();
+
     print("Copyright (c) thatOneArchUser 2022-2023\n\nWelcome to reflect os!\nType 'help' for a command list\n>> ");
-    while (1);
+    return;
 }

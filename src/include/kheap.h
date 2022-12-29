@@ -43,5 +43,5 @@ u32 kmalloc_ap(u32 sz, u32 *phy);
 u32 kmalloc(u32 sz);
 
 heap_t *mkheap(u32 start, u32 end, u32 max, u8 supervisor, u8 ro);
-void *alloc(u32 size);
+void *alloc(u32 size, u8 align, heap_t *heap);
 void kfree(void *p);

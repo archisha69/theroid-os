@@ -91,18 +91,38 @@ static u32 contract(u32 size, heap_t *heap) {
 }
 
 u32 kmalloc_int(u32 sz, int align, u32 *phy) {
-    if (align == 1 && (placement_addr & 0xFFFFF000)) {
-        placement_addr &= 0xFFFFF000;
-        placement_addr += 0x1000;
-    }
+    // if (align == 1 && (placement_addr & 0xFFFFF000)) {
+    //     placement_addr &= 0xFFFFF000;
+    //     placement_addr += 0x1000;
+    // }
 
-    if (phy) {
-        *phy = placement_addr;
-    }
+    // if (phy) {
+    //     *phy = placement_addr;
+    // }
 
-    u32 tmp = placement_addr;
-    placement_addr += sz;
-    return tmp;
+    // u32 tmp = placement_addr;
+    // placement_addr += sz;
+    // return tmp;
+
+    if (kheap != 0) {
+        void *addr = alloc(sz, (u8) align, kheap);
+        if (phy != 0) {
+            page_t *page = get_page((u32) addr, 0, kernel_dir);
+            *phy = page->frame * 0x1000 + ((u32) addr & 0xFFF);
+        }
+        return (u32) addr;
+    } else {
+        if (align == 1 && (placement_addr & 0xFFFFF000)) {
+            placement_addr &= 0xFFFFF000;
+            placement_addr += 0x1000;
+        }
+        if (phy) {
+            *phy = placement_addr;
+        }
+        u32 tmp = placement_addr;
+        placement_addr += sz;
+        return tmp;
+    }
 }
 
 u32 kmalloc_a(u32 sz) {
@@ -139,7 +159,18 @@ heap_t *mkheap(u32 start, u32 end, u32 max, u8 supervisor, u8 ro) {
     heap->end        = end;
     heap->max        = max;
     heap->supervisor = supervisor;
-    heap->ro         = ro;
+    heap->ro         = ro;    // if (align == 1 && (placement_addr & 0xFFFFF000)) {
+    //     placement_addr &= 0xFFFFF000;
+    //     placement_addr += 0x1000;
+    // }
+
+    // if (phy) {
+    //     *phy = placement_addr;
+    // }
+
+    // u32 tmp = placement_addr;
+    // placement_addr += sz;
+    // return tmp;
 
     header_t *hole = (header_t *) start;
     hole->size = end - start;
@@ -150,7 +181,7 @@ heap_t *mkheap(u32 start, u32 end, u32 max, u8 supervisor, u8 ro) {
     return heap;
 }
 
-static void *_alloc(u32 size, u8 align, heap_t *heap) {
+void *alloc(u32 size, u8 align, heap_t *heap) {
     u32 new_size = size + sizeof(header_t) + sizeof(footer_t);
     int iter = find_smallest_hole(new_size, align, heap);
 
@@ -194,7 +225,7 @@ static void *_alloc(u32 size, u8 align, heap_t *heap) {
             foot->head = head;
         }
 
-        return _alloc(size, align, heap);
+        return alloc(size, align, heap);
     }
 
     header_t *orig_head = (header_t *) lookup_oarr(iter, &heap->index);
@@ -316,8 +347,4 @@ static void free(void *p, heap_t *heap) {
 
 void kfree(void *p) {
     free(p, kheap);
-}
-
-void *alloc(u32 size) {
-    return _alloc(size, 0, kheap);
 }

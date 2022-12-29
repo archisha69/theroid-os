@@ -5,6 +5,8 @@
     File: paging.h
 */
 
+#pragma once
+
 #include <isr.h>
 
 #define PAGE_DIR_SIZE 1024
@@ -30,6 +32,7 @@ typedef struct {
     u32 addr;
 } pagedir_t;
 
+extern pagedir_t *crt_dir;
 extern pagedir_t *kernel_dir;
 
 void init_paging();
@@ -38,3 +41,4 @@ page_t *get_page(u32 addr, int make, pagedir_t *dir);
 void pgf(regs_t regs);
 void alloc_frame(page_t *page, int kernel, int writable);
 void free_frame(page_t *page);
+pagedir_t *clone_dir(pagedir_t *src);

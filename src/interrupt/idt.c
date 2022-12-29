@@ -7,33 +7,17 @@
 
 #include <io.h>
 #include <idt.h>
-#include <gdt.h>
+#include <string.h>
 #include <stdlib.h>
 
-#define GDT_ENTRY_NUM 5
 #define IDT_ENTRY_NUM 256
 
-extern void gdt_flush(u32);
 extern void idt_flush(u32);
 
 void init_gdt();
 
-gdt_entry_t gdt_entries[GDT_ENTRY_NUM];
 idt_entry_t idt_entries[IDT_ENTRY_NUM];
-gdt_ptr_t gdt_ptr;
 idt_ptr_t idt_ptr;
-
-static void set_gdt_gate(u8 num, u32 base, u32 lim, u8 access, u8 gran) {
-    gdt_entries[num].base_low    = (base & 0xFFFF);
-    gdt_entries[num].base_middle = (base >> 16) & 0xFF;
-    gdt_entries[num].base_high   = (base >> 24) & 0xFF;
-
-    gdt_entries[num].lim_low     = (lim & 0xFFFF);
-    gdt_entries[num].granularity = (lim >> 16) & 0x0F;
-
-    gdt_entries[num].granularity |= gran & 0xF0;
-    gdt_entries[num].access      = access;
-}
 
 static void set_idt_gate(u8 num, u32 base, u16 sel, u8 flags) {
     idt_entries[num].base_lo = base & 0xFFFF;
@@ -42,19 +26,6 @@ static void set_idt_gate(u8 num, u32 base, u16 sel, u8 flags) {
     idt_entries[num].sel     = sel;
     idt_entries[num].always0 = 0;
     idt_entries[num].flags   = flags;
-}
-
-void init_gdt() {
-    gdt_ptr.limit = (sizeof(gdt_entry_t) * GDT_ENTRY_NUM) - 1;
-    gdt_ptr.base = (u32) &gdt_entries;
-
-    set_gdt_gate(0, 0, 0, 0,0 );                //null segment
-    set_gdt_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); //kernel code segment
-    set_gdt_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); //kernel data segment
-    set_gdt_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); //usermode code segment
-    set_gdt_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); //usermode data segment
-
-    gdt_flush((u32) &gdt_ptr);
 }
 
 void init_idt() {
@@ -124,7 +95,7 @@ void init_idt() {
     set_idt_gate(45, (u32) irq13, 0x08, 0x8E);
     set_idt_gate(46, (u32) irq14, 0x08, 0x8E);
     set_idt_gate(47, (u32) irq15, 0x08, 0x8E);
+    set_idt_gate(128, (u32) isr128, 0x08, 0x8E);
 
     idt_flush((u32) &idt_ptr);
-    asm volatile("sti"); //enable external interrupts
 }

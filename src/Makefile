@@ -3,7 +3,8 @@ OBJ_FILES = ${C_SOURCES:.c=.o \
 	boot/boot.o \
 	boot/dt.o \
 	interrupt/interrupt.o \
-	fonts/terminus.o}
+	fonts/terminus.o \
+	task/process.o}
 
 CCFLAGS = -I ./include -g -m32 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -no-pie -fno-pic -Wall -Wextra -O2
 KERNELBIN = ../build/kernel.bin
@@ -23,34 +24,34 @@ prepare:
 
 run:
 ifeq ($(shell test -e $(OSBIN) && echo -n yes),yes)
-	qemu-system-i386 -cdrom $(OSBIN)
+	qemu-system-i386 -cdrom $(OSBIN) -soundhw pcspk
 else
 	$(MAKE) build
-	qemu-system-i386 -cdrom $(OSBIN)
+	qemu-system-i386 -cdrom $(OSBIN) -soundhw pcspk
 endif
 
 debug:
 ifeq ($(shell test -e $(OSBIN) && echo -n yes),yes)
-	qemu-system-i386 -cdrom $(OSBIN) -d int --no-reboot
+	qemu-system-i386 -cdrom $(OSBIN) -d int --no-reboot -soundhw pcspk
 else
 	$(MAKE) build
-	qemu-system-i386 -cdrom $(OSBIN) -d int --no-reboot
+	qemu-system-i386 -cdrom $(OSBIN) -d int --no-reboot -soundhw pcspk
 endif
 
 run-kernel:
 ifeq ($(shell test -e $(KERNELBIN) && echo -n yes),yes)
-	qemu-system-i386 -kernel $(KERNELBIN)
+	qemu-system-i386 -kernel $(KERNELBIN) -soundhw pcspk
 else
 	$(MAKE) build
-	qemu-system-i386 -kernel $(KERNELBIN)
+	qemu-system-i386 -kernel $(KERNELBIN) -soundhw pcspk
 endif
 
 debug-kernel:
 ifeq ($(shell test -e $(KERNELBIN) && echo -n yes),yes)
-	qemu-system-i386 -kernel $(KERNELBIN) -d int --no-reboot
+	qemu-system-i386 -kernel $(KERNELBIN) -d int --no-reboot -soundhw pcspk
 else
 	$(MAKE) build
-	qemu-system-i386 -kernel $(KERNELBIN) -d int --no-reboot
+	qemu-system-i386 -kernel $(KERNELBIN) -d int --no-reboot -soundhw pcspk
 endif
 
 %.o: %.c

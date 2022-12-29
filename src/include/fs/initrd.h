@@ -18,4 +18,6 @@ typedef struct {
     u32 len;
 } initrd_file_t;
 
+extern fs_node_t *initrd_dev;
+
 fs_node_t *init_initrd(u32 loc);

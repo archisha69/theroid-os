@@ -26,6 +26,7 @@ global start
 extern start_kernel
 
 start:
+	push esp
 	push ebx
 
 	cli

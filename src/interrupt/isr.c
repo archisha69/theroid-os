@@ -7,12 +7,17 @@
 
 #include <io.h>
 #include <isr.h>
-#include <common.h>
+#include <vga.h>
+#include <string.h>
 
 #include <hal/panic.h>
 
 #define INTERRUPT_NUM 256
 isr_t interrupt_handlers[INTERRUPT_NUM];
+
+void clear_int() {
+    memset(&interrupt_handlers, 0, sizeof(isr_t) * INTERRUPT_NUM);
+}
 
 void isr_handler(regs_t regs) {
     if (interrupt_handlers[regs.int_no] != 0) {
@@ -20,6 +25,9 @@ void isr_handler(regs_t regs) {
         handler(regs);
     } else {
         //panic("unhandled interrupt: %d\nerr_code: %d  ", regs.int_no, regs.err_code);
+        //printf("unhandled interrupt: %d", regs.int_no);
+        printc(regs.int_no);
+        while (1) asm volatile("hlt");
     }
 }
 

@@ -17,6 +17,7 @@
 #define INDEX_FROM_BIT(a) (a / 32)
 #define OFF_FROM_BIT(a) (a % 32)
 
+extern void copy_page_physical(u32, u32);
 extern heap_t *kheap;
 
 pagedir_t *kernel_dir = 0;
@@ -90,13 +91,15 @@ void free_frame(page_t *page) {
 
 void init_paging() {
     u32 mem_end = 0x1000000;
+
     nframes = mem_end / 0x1000;
     frames = (u32 *) kmalloc(INDEX_FROM_BIT(nframes));
     memset(frames, 0, INDEX_FROM_BIT(nframes));
 
+    u32 addr;
     kernel_dir = (pagedir_t *) kmalloc_a(sizeof(pagedir_t));
     memset(kernel_dir, 0, sizeof(pagedir_t));
-    crt_dir = kernel_dir;
+    kernel_dir->addr = (u32) kernel_dir->tab_phy;
 
     int i = 0;
     for (i = KHEAP_START; i < KHEAP_START + KHEAP_INITIAL_SZ; i += 0x1000) {
@@ -117,11 +120,14 @@ void init_paging() {
     switch_page_dir(kernel_dir);
 
     kheap = mkheap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SZ, 0xCFFFF000, 0, 0);
+
+    crt_dir = clone_dir(kernel_dir);
+    switch_page_dir(crt_dir);
 }
 
 void switch_page_dir(pagedir_t *dir) {
     crt_dir = dir;
-    asm volatile("mov %0, %%cr3" :: "r"(&dir->tab_phy));
+    asm volatile("mov %0, %%cr3" :: "r"(dir->addr));
     u32 cr0;
     asm volatile("mov %%cr0, %0" : "=r"(cr0));
     cr0 |= 0x80000000;
@@ -160,4 +166,51 @@ void pgf(regs_t regs) {
     if (us) printf(" user-mode");
     if (reserved) printf(" reserved");
     printf(") instruction address: %x", id);
+}
+
+static pagetab_t *clone_table(pagetab_t *src, u32 *addr) {
+    pagetab_t *tab = (pagetab_t *) kmalloc_ap(sizeof(pagetab_t), addr);
+    memset(tab, 0, sizeof(pagedir_t));
+
+    for (int i = 0; i < 1024; i++) {
+        if (src->pages[i].frame) {
+            alloc_frame(&tab->pages[i], 0, 0);
+
+            if (src->pages[i].present)  tab->pages[i].present = 1;
+            if (src->pages[i].rw)       tab->pages[i].rw = 1;
+            if (src->pages[i].user)     tab->pages[i].user = 1;
+            if (src->pages[i].accessed) tab->pages[i].accessed = 1;
+            if (src->pages[i].dirty)    tab->pages[i].dirty = 1;
+
+            copy_page_physical(src->pages[i].frame * 0x1000, tab->pages[i].frame * 0x1000);
+        }
+    }
+
+    return tab;
+}
+
+pagedir_t *clone_dir(pagedir_t *src) {
+    u32 phy;
+    pagedir_t *dir = (pagedir_t *) kmalloc_ap(sizeof(pagedir_t), &phy);
+    memset(dir, 0, sizeof(pagedir_t));
+
+    u32 off = (u32) dir->tab_phy - (u32) dir;
+    dir->addr = phy + off;
+
+    for (int i = 0; i < 1024; i++) {
+        if (!src->tables[i]) {
+            continue;
+        }
+
+        if (kernel_dir->tables[i] == src->tables[i]) {
+            dir->tables[i] = src->tables[i];
+            dir->tab_phy[i] = src->tab_phy[i];
+        } else {
+            u32 phy;
+            dir->tables[i] = clone_table(src->tables[i], &phy);
+            dir->tab_phy[i] = phy | 0x07;
+        }
+    }
+
+    return dir;
 }

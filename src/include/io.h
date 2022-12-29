@@ -20,5 +20,10 @@
 #define KEYBOARD_DAT 0x60
 #define KEYBOARD_STATUS 0x64
 
+#define PIT_DAT0 0x40
+#define PIT_DAT1 0x41
+#define PIT_DAT2 0x42
+#define PIT_CMD  0x43
+
 void outb(u16 port, u8 val);
 u8 inb(u16 port);

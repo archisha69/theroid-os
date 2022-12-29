@@ -26,6 +26,8 @@
 #define IRQ14 46
 #define IRQ15 47
 
+#define IRQ_SYSCALL 0x80
+
 typedef struct {
     u32 ds;
     u32 edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -37,3 +39,4 @@ typedef void (*isr_t) (regs_t);
 
 void register_interrupt_handler(u8 n, isr_t handler);
 void delete_interrupt_handler(u8 n);
+void clear_int();
