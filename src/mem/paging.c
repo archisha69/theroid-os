@@ -165,7 +165,7 @@ void pgf(regs_t regs) {
     if (rw) printf(" read-only");
     if (us) printf(" user-mode");
     if (reserved) printf(" reserved");
-    printf(") instruction address: %x", id);
+    print(")");
 }
 
 static pagetab_t *clone_table(pagetab_t *src, u32 *addr) {

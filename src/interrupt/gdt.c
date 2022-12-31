@@ -38,7 +38,7 @@ void init_gdt() {
     set_gdt_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); //kernel data segment
     set_gdt_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); //usermode code segment
     set_gdt_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); //usermode data segment
-    write_tss(5, 0x10, 0x0);
+    write_tss(5, 0x10, 0x0);                                 //task state segment
 
     gdt_flush((u32) &gdt_ptr);
     tss_flush();

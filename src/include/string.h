@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <math.h>
 #include <common.h>
 
 void append(char *s, char n);
@@ -29,3 +28,4 @@ bool startswith(char str[], char c[]);
 int split(char *str, char delimiter, char ***dest);
 char *trim(char *str);
 int atoi(char *str);
+void add_leading_zero(char *dest, int num);

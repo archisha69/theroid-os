@@ -25,5 +25,11 @@
 #define PIT_DAT2 0x42
 #define PIT_CMD  0x43
 
+#define CMOS_CMD 0x70
+#define CMOS_DAT 0x71
+
 void outb(u16 port, u8 val);
+void outw(u16 port, u16 val);
 u8 inb(u16 port);
+u16 inw(u16 port);
+void io_wait();

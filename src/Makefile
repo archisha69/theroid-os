@@ -24,7 +24,7 @@ prepare:
 
 run:
 ifeq ($(shell test -e $(OSBIN) && echo -n yes),yes)
-	qemu-system-i386 -cdrom $(OSBIN) -soundhw pcspk
+	qemu-system-i386 -cdrom $(OSBIN) -soundhw pcspk -rtc base=localtime,clock=host
 else
 	$(MAKE) build
 	qemu-system-i386 -cdrom $(OSBIN) -soundhw pcspk

@@ -110,13 +110,12 @@ void task_switch() {
         return;
     }
 
-    u32 esp, ebp, eip, edx, eax;
+    u32 esp, ebp, eip, edx;
     asm volatile("mov %%esp, %0" : "=r"(esp));
     asm volatile("mov %%ebp, %0" : "=r"(ebp));
     eip = read_eip();
-    edx = read_edx();
 
-    if (edx == 0x6969) {
+    if (eip == 0x6969) {
         return; //we have just switched tasks
     }
 
@@ -129,9 +128,9 @@ void task_switch() {
         crt_task = rqueue;
     }
 
-    eip = crt_task->regs.eip;
     esp = crt_task->regs.esp;
     ebp = crt_task->regs.ebp;
+    //eip = crt_task->regs.eip;
 
     crt_dir = crt_task->dir;
     set_kernel_stack(crt_task->kernel_stack + KERNEL_STACK_SIZE);
@@ -142,7 +141,7 @@ void task_switch() {
         mov %1, %%esp; \
         mov %2, %%ebp; \
         mov %3, %%cr3; \
-        mov $0x6969, %%edx; \
+        mov $0x6969, %%eax; \
         sti; \
         jmp *%%ecx" :: "r"(eip), "r"(esp), "r"(ebp), "r"(crt_dir->addr));
 }

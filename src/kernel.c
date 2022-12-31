@@ -11,10 +11,10 @@
 #include <idt.h>
 #include <psf.h>
 #include <pmm.h>
+#include <rtc.h>
 #include <timer.h>
 #include <kheap.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
 #include <paging.h>
@@ -65,20 +65,21 @@ void reboot() {
 int system(char *cmd) {
     printf("\n");
     cmd = trim(cmd);
-    char **argv;
+    char **argv;    
     int argc = split(cmd, ' ', &argv);
+    int status = ERR_CMD_NOTFOUND;
 
     if (strcmp(argv[0], "clear")) {
         clear();
         printf(">> ");
-        return EXIT_SUCCESS;
+        status = EXIT_SUCCESS;
     } else if (strcmp(argv[0], "reboot")) {
         reboot();
-        return EXIT_SUCCESS;
-    } else if (strcmp(argv[0], "echo")) {
+        status =  EXIT_SUCCESS;
+    }else if (strcmp(argv[0], "echo")) {
         if (argc == 1) {
             print("echo: repeats your text\n\tUsage: echo <text>\n>> ");
-            return ERR_NO_ARGS;
+            status = ERR_NO_ARGS;
         }
 
         for (int i = 1; i < argc; i++) {
@@ -87,7 +88,7 @@ int system(char *cmd) {
         }
 
         print("\n>> ");
-        return EXIT_SUCCESS;
+        status = EXIT_SUCCESS;
     } else if (strcmp(argv[0], "rand")) {
         if (argc == 1) {
             printf("%d", rand());
@@ -96,13 +97,13 @@ int system(char *cmd) {
             printf("%d", rand() % max);
         }
         print("\n>> ");
-        return EXIT_SUCCESS;
+        status = EXIT_SUCCESS;
     } else if (strcmp(argv[0], "panic")) {
         panic("manually initiated panic");
-        return EXIT_SUCCESS;
+        status = EXIT_SUCCESS;
     } else if (strcmp(argv[0], "help")) {
         print("Command list:\n\tclear - clears the screen\n\treboot - reboots the system\n\techo <text> - repeats your text\n\trand - returns a random number\n\tls - shows the contents of the root directory\n>> ");
-        return EXIT_SUCCESS;
+        status = EXIT_SUCCESS;
     } else if (strcmp(argv[0], "ls")) {
         int i = 0;
         struct dirent *node = 0;
@@ -129,14 +130,22 @@ int system(char *cmd) {
             i++;
         }
         print("\n>> ");
-        return EXIT_SUCCESS;
-    } else if (strcmp(argv[0], "sleep")) {
-        sleep(5);
+        status = EXIT_SUCCESS;
+    } else if (strcmp(argv[0], "time")) {
+        print_crt_time();
         print("\n>> ");
+        status = EXIT_SUCCESS;
+    }
+    
+    if (status == ERR_CMD_NOTFOUND) {
+        printf("Unknown command: %s\n>> ", argv[0]);
     }
 
-    printf("Unknown command: %s\n>> ", argv[0]);
-    return ERR_CMD_NOTFOUND;
+    for (int i = 0; i < argc; i++) {
+        kfree(argv[i]);
+    }
+
+    return status;
 }
 
 void start_kernel(struct multiboot *mboot_ptr, u32 initial_stack) {
@@ -153,9 +162,6 @@ void start_kernel(struct multiboot *mboot_ptr, u32 initial_stack) {
     print("Initializing interrupt mask register\n");
     outb(PIC_MASTER_DAT, 0xF9);
 
-    print("Initializing PIT timer\n");
-    init_timer(100);
-
     print("Initializing PC screen font\n");
     psf_init();
 
@@ -166,15 +172,15 @@ void start_kernel(struct multiboot *mboot_ptr, u32 initial_stack) {
     placement_addr = initrd_end;
 
     print("Initializing paging\n");
-    init_paging();
+    init_paging();  
 
     print("Initializing tasking system\n");
     init_tasking();
 
-    print("Initializing dynamic memory\n");
-    init_dynamic_mem();
+    print("Initializing PIT (IRQ 0)\n");
+    init_timer(100);
 
-    print("Initializing keyboard\n");
+    print("Initializing keyboard (IRQ 1)\n");
     init_keyboard();
 
     print("Setting up initrd root\n");
@@ -183,9 +189,12 @@ void start_kernel(struct multiboot *mboot_ptr, u32 initial_stack) {
     print("Initializing physical memory manager\n");
     init_pmm(1073741824); // 1 GB
 
+    print("\nInitializing Real Time Clock (IRQ 8)\n");
+    init_rtc();
+    print_crt_time();
+
     print("\nEnabling interrupts\n");
     asm volatile("sti");
-
     //clear();
 
     print("Copyright (c) thatOneArchUser 2022-2023\n\nWelcome to reflect os!\nType 'help' for a command list\n>> ");

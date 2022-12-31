@@ -6,7 +6,7 @@
 */
 
 #include <math.h>
-#include <malloc.h>
+#include <kheap.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ char *strtok(char *s, char *delm) {
 
     if (!s || !delm || s[q] == '\0') return nullptr;
 
-    char *c = (char*) malloc(sizeof(char) * 100);
+    char *c = (char*) kmalloc(sizeof(char) * 100);
     int i = q;
     int j = 0;
     int k = 0;
@@ -73,7 +73,7 @@ char *strdup(char *token) {
     while (token[len]) {
         len++;
     }
-    str = (char *) malloc(len + 1);
+    str = (char *) kmalloc(len + 1);
     ptr = str;
     while (*token) {
         *ptr = *token++;
@@ -106,12 +106,12 @@ int split(char *str, char delimiter, char ***dest) {
         p++;
     }
 
-    *dest = (char **) malloc(count);
+    *dest = (char **) kmalloc(count);
     if (*dest == 0) return 1;
     p = str;
     while (*p != '\0') {
         if (*p == delimiter) {
-            (*dest)[i] = (char *) malloc(token_len);
+            (*dest)[i] = (char *) kmalloc(token_len);
             if ((*dest)[i] == 0) return 1;
             token_len = 0;
             i++;
@@ -119,7 +119,7 @@ int split(char *str, char delimiter, char ***dest) {
         p++;
         token_len++;
     }
-    (*dest)[i] = (char *) malloc(token_len);
+    (*dest)[i] = (char *) kmalloc(token_len);
     if ((*dest)[i] == 0) return 1;
     i = 0;
     p = str;
@@ -339,4 +339,14 @@ int int2hex(char *dest, int num) {
 
     strcpy(dest + start, buff + i + 1);
     return start + 14 + i;
+}
+
+void add_leading_zero(char *dest, int num) {
+    if (num >= 10) {
+        itoa(dest, num);
+        return;
+    }
+
+    dest[0] = '0';
+    dest[1] = num + '0';
 }

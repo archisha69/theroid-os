@@ -8,7 +8,6 @@
 //todo: linear frame buffer
 
 #include <psf.h>
-#include <malloc.h>
 
 extern char _binary_fonts_terminus_psf_start;
 extern char _binary_fonts_terminus_psf_end;

@@ -91,19 +91,6 @@ static u32 contract(u32 size, heap_t *heap) {
 }
 
 u32 kmalloc_int(u32 sz, int align, u32 *phy) {
-    // if (align == 1 && (placement_addr & 0xFFFFF000)) {
-    //     placement_addr &= 0xFFFFF000;
-    //     placement_addr += 0x1000;
-    // }
-
-    // if (phy) {
-    //     *phy = placement_addr;
-    // }
-
-    // u32 tmp = placement_addr;
-    // placement_addr += sz;
-    // return tmp;
-
     if (kheap != 0) {
         void *addr = alloc(sz, (u8) align, kheap);
         if (phy != 0) {
@@ -159,18 +146,7 @@ heap_t *mkheap(u32 start, u32 end, u32 max, u8 supervisor, u8 ro) {
     heap->end        = end;
     heap->max        = max;
     heap->supervisor = supervisor;
-    heap->ro         = ro;    // if (align == 1 && (placement_addr & 0xFFFFF000)) {
-    //     placement_addr &= 0xFFFFF000;
-    //     placement_addr += 0x1000;
-    // }
-
-    // if (phy) {
-    //     *phy = placement_addr;
-    // }
-
-    // u32 tmp = placement_addr;
-    // placement_addr += sz;
-    // return tmp;
+    heap->ro         = ro;
 
     header_t *hole = (header_t *) start;
     hole->size = end - start;

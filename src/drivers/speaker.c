@@ -2,7 +2,7 @@
     Copyright (c) 2022-2023, thatOneArchUser
     All rights reserved.
 
-    File: speaker.c
+    File: speakers.c
 */
 
 #include <io.h>
@@ -30,5 +30,5 @@ static void stop_sound() {
 void beep(u32 ms) {
     play_sound(1000);
     //sleep(ms);
-    stop_sound();
+    //stop_sound();
 }
