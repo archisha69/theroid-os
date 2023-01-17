@@ -1,11 +1,12 @@
 # reflect-os
-os (wip)
+most stable os in ohio :skull:
 
 ## features
-+ keyboard and vga drivers
-+ dynamic memory
-+ paging (finally)
-+ basic initrd functions
++ page fault
++ page fault
++ keyboard not working
++ page fault
++ general protection fault
 
 i love democracy
 
